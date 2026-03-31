@@ -1,0 +1,1504 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Harvard 引用格式生成器</title>
+    <style>
+        :root {
+            --bg: #f2ede3;
+            --bg-soft: #f8f5ee;
+            --surface: rgba(255, 252, 246, 0.88);
+            --surface-strong: #fffdf8;
+            --surface-muted: #f7f1e5;
+            --text: #17261e;
+            --muted: #5f6c64;
+            --line: rgba(23, 38, 30, 0.12);
+            --line-strong: rgba(23, 38, 30, 0.2);
+            --accent: #1f4b3a;
+            --accent-deep: #163628;
+            --accent-soft: #dfe9e2;
+            --gold: #c39b5c;
+            --gold-soft: #efe1c3;
+            --shadow-lg: 0 24px 60px rgba(20, 35, 28, 0.12);
+            --shadow-md: 0 14px 36px rgba(20, 35, 28, 0.09);
+            --radius-xl: 28px;
+            --radius-lg: 22px;
+            --radius-md: 16px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Avenir Next", "Helvetica Neue", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(195, 155, 92, 0.18), transparent 30%),
+                radial-gradient(circle at bottom right, rgba(31, 75, 58, 0.16), transparent 32%),
+                linear-gradient(135deg, #f6f1e7 0%, #efe8dc 42%, #edf3ee 100%);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 18px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before,
+        body::after {
+            content: "";
+            position: fixed;
+            border-radius: 999px;
+            filter: blur(18px);
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.5;
+        }
+
+        body::before {
+            width: 260px;
+            height: 260px;
+            top: -80px;
+            right: 8%;
+            background: rgba(195, 155, 92, 0.22);
+        }
+
+        body::after {
+            width: 320px;
+            height: 320px;
+            left: -120px;
+            bottom: -100px;
+            background: rgba(31, 75, 58, 0.18);
+        }
+
+        .page-shell {
+            position: relative;
+            z-index: 1;
+            max-width: 1540px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 300px minmax(0, 1.06fr) minmax(0, 0.94fr);
+            gap: 18px;
+            align-items: stretch;
+            min-height: calc(100vh - 36px);
+        }
+
+        .page-shell > * {
+            min-width: 0;
+        }
+
+        .sidebar-panel,
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg);
+            backdrop-filter: blur(18px);
+        }
+
+        .sidebar-panel,
+        .panel {
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: calc(100vh - 36px);
+        }
+
+        .sidebar-panel {
+            padding: 24px 22px;
+            background:
+                linear-gradient(165deg, rgba(20, 47, 35, 0.98) 0%, rgba(34, 81, 60, 0.95) 58%, rgba(178, 142, 84, 0.9) 150%);
+            color: #f7f1e7;
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .sidebar-panel::before,
+        .sidebar-panel::after,
+        .panel::before {
+            content: "";
+            position: absolute;
+            pointer-events: none;
+        }
+
+        .sidebar-panel::before {
+            width: 180px;
+            height: 180px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.08);
+            top: -72px;
+            right: -56px;
+        }
+
+        .sidebar-panel::after {
+            width: 220px;
+            height: 220px;
+            border-radius: 999px;
+            background: rgba(195, 155, 92, 0.14);
+            bottom: -110px;
+            left: -50px;
+        }
+
+        .eyebrow,
+        .panel-kicker {
+            display: inline-block;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+        }
+
+        .eyebrow {
+            color: rgba(247, 241, 231, 0.72);
+            margin-bottom: 16px;
+        }
+
+        .brand-block h1,
+        .panel h2,
+        .settings-block h2 {
+            font-family: "Iowan Old Style", "Palatino Linotype", "Songti SC", serif;
+            letter-spacing: -0.02em;
+        }
+
+        .brand-block {
+            position: relative;
+            z-index: 1;
+            padding-bottom: 18px;
+        }
+
+        .brand-block h1 {
+            font-size: clamp(2.18rem, 3.2vw, 2.8rem);
+            line-height: 1.04;
+            margin-bottom: 12px;
+            max-width: 7ch;
+        }
+
+        .brand-block p {
+            font-size: 0.95rem;
+            line-height: 1.72;
+            color: rgba(247, 241, 231, 0.86);
+            max-width: 26ch;
+        }
+
+        .sidebar-divider {
+            position: relative;
+            z-index: 1;
+            height: 1px;
+            margin: 0 0 18px;
+            background: linear-gradient(90deg, rgba(247, 241, 231, 0.12), rgba(247, 241, 231, 0.6), rgba(247, 241, 231, 0.12));
+        }
+
+        .settings-block {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            gap: 16px;
+        }
+
+        .panel {
+            padding: 24px 22px 20px;
+            background: linear-gradient(180deg, rgba(255, 253, 248, 0.96) 0%, rgba(247, 241, 229, 0.86) 100%);
+            box-shadow: 0 20px 44px rgba(20, 35, 28, 0.1);
+        }
+
+        .panel::before {
+            position: absolute;
+            top: 0;
+            left: 22px;
+            right: 22px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(195, 155, 92, 0.85), transparent);
+        }
+
+        .card-header,
+        .panel-header {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 16px;
+            min-height: 96px;
+            justify-content: flex-start;
+        }
+
+        .panel-kicker {
+            color: rgba(31, 75, 58, 0.66);
+        }
+
+        .settings-block h2,
+        .panel h2 {
+            font-size: clamp(1.42rem, 1.8vw, 1.84rem);
+            line-height: 1.15;
+            color: var(--text);
+        }
+
+        .settings-block h2 {
+            color: #ffffff;
+        }
+
+        .settings-block p,
+        .panel-header p {
+            color: var(--muted);
+            font-size: 0.91rem;
+            line-height: 1.62;
+        }
+
+        .settings-block p {
+            color: #ffffff;
+        }
+
+        .form-group {
+            margin-bottom: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin-bottom: 10px;
+            color: var(--muted);
+            font-size: 0.76rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1.5px solid var(--line);
+            border-radius: 18px;
+            font-size: 0.96rem;
+            font-family: inherit;
+            transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease, background-color 0.25s ease;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(247, 241, 229, 0.66) 100%);
+            color: var(--text);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+        }
+
+        input:hover,
+        select:hover,
+        textarea:hover {
+            border-color: rgba(31, 75, 58, 0.28);
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: rgba(31, 75, 58, 0.54);
+            box-shadow: 0 0 0 4px rgba(31, 75, 58, 0.08);
+            background: #ffffff;
+        }
+
+        textarea {
+            min-height: 0;
+            height: 100%;
+            resize: none;
+            font-family: "SFMono-Regular", "SF Mono", "Roboto Mono", "Fira Code", "Courier New", monospace;
+            font-size: 0.94rem;
+            line-height: 1.75;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(247, 241, 229, 0.84) 100%);
+        }
+
+        .textarea-hint {
+            font-size: 0.9rem;
+            color: var(--muted);
+            line-height: 1.75;
+            border-radius: 18px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.7) 0%, rgba(247, 241, 229, 0.82) 100%);
+            border: 1px solid rgba(23, 38, 30, 0.08);
+            padding: 15px 16px;
+            margin-top: 12px;
+        }
+
+        .button-group,
+        .copy-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: auto;
+        }
+
+        .copy-actions {
+            justify-content: flex-start;
+        }
+
+        button {
+            appearance: none;
+            border: 1px solid transparent;
+            border-radius: 18px;
+            min-height: 52px;
+            padding: 14px 18px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 650;
+            letter-spacing: 0.01em;
+            transition: transform 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease, background 0.24s ease, color 0.24s ease;
+        }
+
+        button::after {
+            content: "";
+            position: absolute;
+            inset: 1px;
+            border-radius: 17px;
+            opacity: 0;
+            transition: opacity 0.24s ease;
+            pointer-events: none;
+        }
+
+        .btn-primary,
+        .btn-secondary {
+            flex: 1;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-deep) 0%, var(--accent) 100%);
+            color: #f7f1e7;
+            box-shadow: 0 16px 30px rgba(31, 75, 58, 0.24);
+        }
+
+        .btn-primary::after {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), transparent 55%);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 18px 34px rgba(31, 75, 58, 0.28);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.78);
+            color: var(--text);
+            border-color: var(--line-strong);
+            box-shadow: 0 12px 24px rgba(20, 35, 28, 0.07);
+        }
+
+        .btn-secondary::after {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.58), transparent 60%);
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-1px);
+            border-color: rgba(31, 75, 58, 0.28);
+            background: rgba(255, 255, 255, 0.96);
+        }
+
+        .copy-btn {
+            min-width: 168px;
+            background: linear-gradient(135deg, var(--gold-soft) 0%, var(--gold) 100%);
+            color: var(--accent-deep);
+            box-shadow: 0 14px 28px rgba(195, 155, 92, 0.24);
+        }
+
+        .copy-btn::after {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.22), transparent 60%);
+        }
+
+        .copy-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 16px 30px rgba(195, 155, 92, 0.3);
+        }
+
+        .copy-btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary:hover::after,
+        .btn-secondary:hover::after,
+        .copy-btn:hover::after {
+            opacity: 1;
+        }
+
+        button:disabled {
+            background: #d7d3cc;
+            color: #8c877d;
+            border-color: transparent;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .info-box {
+            margin-top: 10px;
+            border-radius: 18px;
+            padding: 12px 14px;
+            background: linear-gradient(135deg, rgba(223, 233, 226, 0.78) 0%, rgba(247, 241, 229, 0.92) 100%);
+            border: 1px solid rgba(31, 75, 58, 0.14);
+            color: var(--accent);
+            line-height: 1.6;
+        }
+
+        .info-box strong {
+            display: block;
+            margin-bottom: 4px;
+            color: var(--accent-deep);
+            font-weight: 700;
+        }
+
+        .status-message {
+            display: none;
+            margin-bottom: 16px;
+            padding: 13px 15px;
+            border-radius: 18px;
+            font-size: 0.91rem;
+            line-height: 1.7;
+            border: 1px solid transparent;
+            animation: slideIn 0.28s ease;
+        }
+
+        .status-message.success {
+            background: #e6f5ea;
+            color: #1e5d37;
+            border-color: #b3dfbf;
+        }
+
+        .status-message.warning {
+            background: #fbefcf;
+            color: #8b5a10;
+            border-color: #e3c479;
+        }
+
+        .status-message.error {
+            background: #f9e0df;
+            color: #8d2a2b;
+            border-color: #e7a8aa;
+        }
+
+        .status-message.info {
+            background: #e5f1f5;
+            color: #255a71;
+            border-color: #b2d0df;
+        }
+
+        .parse-result {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 14px;
+            padding: 14px;
+            border-radius: 22px;
+            background: linear-gradient(145deg, rgba(247, 241, 229, 0.88) 0%, rgba(255, 255, 255, 0.86) 100%);
+            border: 1px solid var(--line);
+            max-height: 188px;
+            overflow-y: auto;
+        }
+
+        .parse-field {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-height: 84px;
+            padding: 14px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px solid rgba(23, 38, 30, 0.08);
+            line-height: 1.65;
+        }
+
+        .parse-label {
+            min-width: auto;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            color: var(--muted);
+        }
+
+        .output-box {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            padding: 24px;
+            border-radius: 24px;
+            border: 1px solid var(--line);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(245, 239, 228, 0.92) 100%);
+            font-family: "SFMono-Regular", "SF Mono", "Roboto Mono", "Fira Code", "Courier New", monospace;
+            font-size: 0.95rem;
+            line-height: 1.9;
+            white-space: pre-wrap;
+            word-break: break-word;
+            color: var(--accent-deep);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.88), inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+        }
+
+        .output-box.empty {
+            display: block;
+            text-align: left;
+            color: #8a938c;
+            font-style: normal;
+        }
+
+        .date-note {
+            margin-top: 8px;
+            font-size: 0.84rem;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .panel-body {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0;
+            gap: 14px;
+        }
+
+        .input-group {
+            flex: 1;
+            min-height: 0;
+        }
+
+        .input-group textarea {
+            flex: 1;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .output-box::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .output-box::-webkit-scrollbar-track {
+            background: rgba(23, 38, 30, 0.05);
+            border-radius: 999px;
+        }
+
+        .output-box::-webkit-scrollbar-thumb {
+            background: rgba(31, 75, 58, 0.4);
+            border-radius: 999px;
+        }
+
+        .output-box::-webkit-scrollbar-thumb:hover {
+            background: rgba(31, 75, 58, 0.58);
+        }
+
+        @media (max-width: 1360px) {
+            .page-shell {
+                grid-template-columns: 280px minmax(0, 1fr) minmax(0, 1fr);
+            }
+        }
+
+        @media (max-width: 1120px) {
+            .page-shell {
+                grid-template-columns: 1fr;
+                min-height: auto;
+            }
+
+            .sidebar-panel,
+            .panel {
+                min-height: auto;
+            }
+
+            .sidebar-panel {
+                padding-bottom: 22px;
+            }
+
+            .panel-header,
+            .card-header {
+                min-height: auto;
+            }
+        }
+
+        @media (max-width: 720px) {
+            body {
+                padding: 16px;
+            }
+
+            .sidebar-panel,
+            .panel {
+                padding: 22px;
+                border-radius: 24px;
+                min-height: auto;
+            }
+
+            .button-group,
+            .copy-actions {
+                flex-direction: column;
+            }
+
+            .btn-primary,
+            .btn-secondary,
+            .copy-btn,
+            button {
+                width: 100%;
+            }
+
+            .parse-result {
+                grid-template-columns: 1fr;
+            }
+
+            .output-box {
+                min-height: 280px;
+            }
+
+            .sidebar-panel::before,
+            .sidebar-panel::after {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-shell">
+        <aside class="sidebar-panel">
+            <section class="brand-block">
+                <span class="eyebrow">Harvard Referencing Studio</span>
+                <h1>文献引用转换</h1>
+                <p>粘贴从期刊网站复制的文献信息，自动识别作者、标题、期刊与 DOI，再输出更规范的 Harvard 引文。</p>
+            </section>
+
+            <div class="sidebar-divider"></div>
+
+            <section class="settings-block">
+                <div class="card-header">
+                    <span class="panel-kicker">设置</span>
+                    <h2>格式设置</h2>
+                    <p>先选学校和引用日期，再开始识别。左侧只保留必要设置，右侧专注输入和输出，页面会更整齐。</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="university">选择高校</label>
+                    <select id="university" onchange="updateUniversityInfo()">
+                        <option value="leeds">University of Leeds (利兹大学)</option>
+                        <option value="oxford">University of Oxford (牛津大学)</option>
+                        <option value="cambridge">University of Cambridge (剑桥大学)</option>
+                        <option value="imperial">Imperial College London (伦敦帝国学院)</option>
+                        <option value="ucl">UCL - University College London</option>
+                        <option value="lse">London School of Economics (伦敦经济学院)</option>
+                        <option value="manchester">University of Manchester (曼彻斯特大学)</option>
+                        <option value="warwick">University of Warwick (沃里克大学)</option>
+                        <option value="durham">University of Durham (杜伦大学)</option>
+                        <option value="bristol">University of Bristol (布里斯托大学)</option>
+                        <option value="edinburgh">University of Edinburgh (爱丁堡大学)</option>
+                        <option value="southampton">University of Southampton (南安普敦大学)</option>
+                        <option value="birmingham">University of Birmingham (伯明翰大学)</option>
+                        <option value="york">University of York (约克大学)</option>
+                        <option value="kcl">King's College London (伦敦国王学院)</option>
+                    </select>
+                    <div class="info-box" id="styleInfo">
+                        选择一所高校查看其引用格式要求
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="accessDate">引用日期</label>
+                    <input type="date" id="accessDate">
+                    <div class="date-note">如果不手动选择，系统会默认使用当天日期。</div>
+                </div>
+            </section>
+        </aside>
+
+        <section class="panel source-panel">
+            <div class="panel-header">
+                <span class="panel-kicker">输入</span>
+                <h2>原始文献信息</h2>
+                <p>将期刊网站复制的 txt 信息直接粘贴到这里，系统会自动识别关键字段。</p>
+            </div>
+
+            <div class="panel-body">
+                <div class="form-group input-group">
+                    <label for="citationText">粘贴期刊信息</label>
+                    <textarea id="citationText" placeholder="粘贴期刊文献信息，系统会自动识别。例如：&#10;&#10;Shuo Zhang, Xiaogang Liu, Rongmei Li, Xinle Wang, Jinhuan Cheng, Qiliang Yang, Hao Kong,&#10;AHP-GIS and MaxEnt for delineation of potential distribution,&#10;Ecological Indicators,&#10;Volume 132,&#10;2021,&#10;108339,&#10;ISSN 1470-160X,&#10;https://doi.org/10.1016/j.ecolind.2021.108339"></textarea>
+                    <div class="textarea-hint">
+                        建议保持作者、标题、期刊名、卷号、年份、页码或文章号、DOI 或 URL 的原始顺序，这样识别会更稳定。
+                    </div>
+                </div>
+
+                <div id="parseResult" class="parse-result" style="display: none;"></div>
+
+                <div class="button-group">
+                    <button class="btn-primary" onclick="parseCitation()">识别并生成引文</button>
+                    <button class="btn-secondary" onclick="clearForm()">清空内容</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel output-panel">
+            <div class="panel-header">
+                <span class="panel-kicker">输出</span>
+                <h2>标准引用输出</h2>
+                <p>识别完成后，右侧会生成可直接使用的引文文本，复制前可先做一次快速核对。</p>
+            </div>
+
+            <div class="panel-body">
+                <div id="statusMsg" class="status-message info" role="status" aria-live="polite"></div>
+
+                <div class="output-box empty" id="output">
+                    格式化后的引文将显示在这里...
+                </div>
+
+                <div class="copy-actions">
+                    <button class="copy-btn" id="copyBtn" onclick="copyCitation()" disabled>
+                        复制引文
+                    </button>
+                </div>
+            </div>
+        </section>
+    </div>
+    
+    <script>
+        // Initialize today's date in the date input
+        function initializeDate() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            const dateString = `${year}-${month}-${day}`;
+            document.getElementById('accessDate').value = dateString;
+        }
+        
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', initializeDate);
+        
+        const UNIVERSITIES = {
+            leeds: {
+                name: "University of Leeds",
+                style: "Leeds Harvard",
+                description: "利兹大学采用正式的Harvard变体格式"
+            },
+            oxford: {
+                name: "University of Oxford",
+                style: "Harvard (flexible by college)",
+                description: "牛津大学使用Harvard格式，具有学院特定变体"
+            },
+            cambridge: {
+                name: "University of Cambridge",
+                style: "Harvard (discipline-specific)",
+                description: "剑桥大学有学科特定的Harvard变体"
+            },
+            imperial: {
+                name: "Imperial College London",
+                style: "Harvard",
+                description: "伦敦帝国学院使用标准Harvard格式"
+            },
+            ucl: {
+                name: "UCL - University College London",
+                style: "Harvard",
+                description: "伦敦大学学院使用标准Harvard格式"
+            },
+            lse: {
+                name: "London School of Economics",
+                style: "Harvard/APA",
+                description: "伦敦经济学院支持Harvard和APA格式"
+            },
+            manchester: {
+                name: "University of Manchester",
+                style: "Harvard",
+                description: "曼彻斯特大学使用标准Harvard格式"
+            },
+            warwick: {
+                name: "University of Warwick",
+                style: "Harvard",
+                description: "沃里克大学使用标准Harvard格式"
+            },
+            durham: {
+                name: "University of Durham",
+                style: "Harvard",
+                description: "杜伦大学使用标准Harvard格式"
+            },
+            bristol: {
+                name: "University of Bristol",
+                style: "Harvard (most flexible)",
+                description: "布里斯托大学拥有最灵活的格式选择"
+            },
+            edinburgh: {
+                name: "University of Edinburgh",
+                style: "Harvard",
+                description: "爱丁堡大学使用标准Harvard格式"
+            },
+            southampton: {
+                name: "University of Southampton",
+                style: "Harvard (department choice)",
+                description: "南安普敦大学允许系部特定选择"
+            },
+            birmingham: {
+                name: "University of Birmingham",
+                style: "Harvard",
+                description: "伯明翰大学使用标准Harvard格式"
+            },
+            york: {
+                name: "University of York",
+                style: "Harvard",
+                description: "约克大学使用标准Harvard格式"
+            },
+            kcl: {
+                name: "King's College London",
+                style: "Harvard/APA",
+                description: "伦敦国王学院有学院特定变体"
+            }
+        };
+        
+        const JOURNAL_KEYWORDS = [
+            'journal', 'review', 'letters', 'science', 'nature', 'medicine',
+            'indicators', 'research', 'studies', 'communications', 'reports',
+            'proceedings', 'management', 'policy', 'health', 'engineering',
+            'ecology', 'environment', 'education', 'economics'
+        ];
+        
+        const NAME_PARTICLES = new Set(['de', 'del', 'da', 'di', 'la', 'le', 'van', 'von', 'bin', 'al']);
+        const MONTH_NAMES = ["January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"];
+        const OUTPUT_PLACEHOLDER = '格式化后的引文将显示在这里...';
+        
+        function cleanLine(line) {
+            return line.replace(/\u00A0/g, ' ').replace(/\s+/g, ' ').trim();
+        }
+        
+        function trimTrailingSeparators(value) {
+            return value.replace(/[\s,;]+$/g, '').trim();
+        }
+        
+        function cleanDisplayValue(value) {
+            return trimTrailingSeparators((value || '').replace(/^[,;:\s]+/, '').trim());
+        }
+        
+        function cleanLocator(value) {
+            return (value || '').trim().replace(/[)\],;.\s]+$/g, '');
+        }
+        
+        function escapeHtml(value) {
+            return String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+        
+        function showStatus(message, tone = 'info', autoHideMs = 0) {
+            const statusEl = document.getElementById('statusMsg');
+            statusEl.className = `status-message ${tone}`;
+            statusEl.textContent = message;
+            statusEl.style.display = 'block';
+            
+            if (showStatus.timer) {
+                clearTimeout(showStatus.timer);
+                showStatus.timer = null;
+            }
+            
+            if (autoHideMs > 0) {
+                showStatus.timer = setTimeout(() => {
+                    statusEl.style.display = 'none';
+                }, autoHideMs);
+            }
+        }
+        
+        function hideStatus() {
+            const statusEl = document.getElementById('statusMsg');
+            if (showStatus.timer) {
+                clearTimeout(showStatus.timer);
+                showStatus.timer = null;
+            }
+            statusEl.style.display = 'none';
+            statusEl.textContent = '';
+            statusEl.className = 'status-message info';
+        }
+
+        function resetOutputBox(message = OUTPUT_PLACEHOLDER) {
+            const outputDiv = document.getElementById('output');
+            outputDiv.className = 'output-box empty';
+            outputDiv.textContent = message;
+            document.getElementById('copyBtn').disabled = true;
+        }
+
+        function formatAccessDate(dateValue) {
+            const baseDate = dateValue ? new Date(dateValue) : new Date();
+            const day = baseDate.getDate();
+            const month = MONTH_NAMES[baseDate.getMonth()];
+            const year = baseDate.getFullYear();
+            return `[Accessed ${day} ${month} ${year}]`;
+        }
+        
+        function isLikelyPersonName(text, allowSingleWord = true) {
+            const cleaned = cleanDisplayValue(text).replace(/\([^)]*\)/g, '');
+            if (!cleaned) return false;
+            if (/\b(journal|volume|issue|pages?|issn|doi|available|online|research article|review article)\b/i.test(cleaned)) {
+                return false;
+            }
+            
+            const words = cleaned.split(/\s+/).filter(Boolean);
+            if (!allowSingleWord && words.length < 2) {
+                return false;
+            }
+            if (words.length > 5) {
+                return false;
+            }
+            
+            let capitalizedWords = 0;
+            const valid = words.every((word) => {
+                const bare = word.replace(/[.,]/g, '');
+                if (!bare) {
+                    return false;
+                }
+                if (NAME_PARTICLES.has(bare.toLowerCase())) {
+                    return true;
+                }
+                if (/^[A-Z][A-Za-z'`’-]*$/.test(bare) || /^[A-Z]{1,3}$/.test(bare)) {
+                    capitalizedWords += 1;
+                    return true;
+                }
+                return false;
+            });
+            
+            return valid && capitalizedWords >= Math.min(2, words.length);
+        }
+        
+        function splitAuthorCandidates(input) {
+            const cleaned = trimTrailingSeparators(input || '');
+            if (!cleaned) return [];
+            
+            if (cleaned.includes(';')) {
+                return cleaned.split(/\s*;\s*/).map(part => part.trim()).filter(Boolean);
+            }
+            
+            const normalizedAnd = cleaned.replace(/\s+(?:and|&)\s+/gi, ', ');
+            const commaSegments = normalizedAnd.split(/\s*,\s*/).map(part => part.trim()).filter(Boolean);
+            
+            if (commaSegments.length >= 2) {
+                const segmentsLookLikeFullNames = commaSegments.every(segment => isLikelyPersonName(segment, false));
+                if (segmentsLookLikeFullNames) {
+                    return commaSegments;
+                }
+                
+                if (commaSegments.length % 2 === 0) {
+                    const paired = [];
+                    for (let i = 0; i < commaSegments.length; i += 2) {
+                        paired.push(`${commaSegments[i]}, ${commaSegments[i + 1]}`);
+                    }
+                    if (paired.every(segment => isLikelyPersonName(segment.replace(',', ' '), false))) {
+                        return paired;
+                    }
+                }
+            }
+            
+            if (/\s+(?:and|&)\s+/i.test(cleaned)) {
+                return cleaned.split(/\s+(?:and|&)\s+/i).map(part => part.trim()).filter(Boolean);
+            }
+            
+            return [cleaned];
+        }
+        
+        function looksLikeAuthorList(line) {
+            const segments = splitAuthorCandidates(line);
+            if (segments.length > 1) {
+                return segments.every(segment => isLikelyPersonName(segment.replace(',', ' '), false));
+            }
+            return isLikelyPersonName(line, false);
+        }
+        
+        function getJournalScore(text) {
+            const cleaned = cleanDisplayValue(text);
+            if (!cleaned) {
+                return -Infinity;
+            }
+            
+            const words = cleaned.split(/\s+/).filter(Boolean);
+            let score = 0;
+            
+            if (JOURNAL_KEYWORDS.some(keyword => cleaned.toLowerCase().includes(keyword))) {
+                score += 3;
+            }
+            if (words.length >= 2 && words.length <= 8) {
+                score += 1;
+            }
+            if (words.length > 10) {
+                score -= 1;
+            }
+            if (/[:?]/.test(cleaned)) {
+                score -= 1;
+            }
+            if (looksLikeAuthorList(cleaned)) {
+                score -= 3;
+            }
+            
+            return score;
+        }
+        
+        function extractContentPrefix(line) {
+            const match = line.match(/^(.*?)(?:,\s*(?:Volume|Vol\.?|Issue|Pages?|pp\.?|ISSN|article\s*(?:number|no)|https?:\/\/|doi[:\s]))/i);
+            const prefix = match ? cleanDisplayValue(match[1]) : '';
+            return prefix;
+        }
+        
+        function isNoiseLine(line) {
+            return /^(available online|published online|open access|research article|review article|original article|short communication|article preview|highlights)\b/i.test(line);
+        }
+        
+        function isMetaOnlyLine(line) {
+            return (
+                isNoiseLine(line) ||
+                /^ISSN\b/i.test(line) ||
+                /^(https?:\/\/|doi[:\s])/i.test(line) ||
+                /^(Volume|Vol\.?)\b/i.test(line) ||
+                /^(Issue|No\.?)\b/i.test(line) ||
+                /^(Pages?|pp\.?)\b/i.test(line) ||
+                /^article\s*(number|no)\b/i.test(line) ||
+                /^\(?((19|20)\d{2})\)?[.,;]?$/.test(line) ||
+                /^\d+\s*[-–]\s*\d+[.,;]?$/.test(line) ||
+                /^\d{5,}[A-Za-z]?[.,;]?$/.test(line)
+            );
+        }
+        
+        function extractAuthorTitleJournal(contentLines) {
+            const cleanedLines = contentLines.map(cleanDisplayValue).filter(Boolean);
+            if (cleanedLines.length === 0) {
+                return {authors: '', title: '', journal: ''};
+            }
+            
+            let authorLines = [];
+            let cursor = 0;
+            
+            while (cursor < cleanedLines.length && cursor < 3) {
+                const line = cleanedLines[cursor];
+                const canContinueAuthorBlock = authorLines.length > 0 && (
+                    looksLikeAuthorList(line) ||
+                    (trimTrailingSeparators(cleanedLines[cursor - 1]).endsWith(',') && isLikelyPersonName(line, false))
+                );
+                
+                if ((cursor === 0 && looksLikeAuthorList(line)) || canContinueAuthorBlock) {
+                    authorLines.push(line);
+                    cursor += 1;
+                    continue;
+                }
+                break;
+            }
+            
+            const authors = cleanDisplayValue(authorLines.join(', '));
+            const remaining = cleanedLines.slice(cursor);
+            
+            if (remaining.length === 0) {
+                return {authors, title: '', journal: ''};
+            }
+            if (remaining.length === 1) {
+                return {authors, title: remaining[0], journal: ''};
+            }
+            if (remaining.length === 2) {
+                return {authors, title: remaining[0], journal: remaining[1]};
+            }
+            
+            const lastLine = remaining[remaining.length - 1];
+            const lastTwoLines = remaining.slice(-2).join(' ');
+            const useTwoLineJournal = getJournalScore(lastTwoLines) > getJournalScore(lastLine) + 1;
+            
+            return {
+                authors,
+                title: remaining.slice(0, useTwoLineJournal ? -2 : -1).join(' ').trim(),
+                journal: useTwoLineJournal ? lastTwoLines : lastLine
+            };
+        }
+        
+        // 解析粘贴的期刊信息
+        function parseCitationText(text) {
+            const lines = text
+                .split('\n')
+                .map(cleanLine)
+                .filter(Boolean);
+            
+            const result = {
+                authors: '',
+                title: '',
+                journal: '',
+                year: '',
+                volume: '',
+                issue: '',
+                pages: '',
+                articleNumber: '',
+                doi: '',
+                url: '',
+                issn: ''
+            };
+            
+            const fullText = lines.join('\n');
+            const contentLines = [];
+            const numericCandidates = [];
+            
+            lines.forEach((line) => {
+                if (!result.doi) {
+                    const doiUrlMatch = line.match(/https?:\/\/doi\.org\/[^\s<>"')]+/i);
+                    const doiTextMatch = line.match(/\b(?:doi[:\s]+)(10\.\S+)/i);
+                    if (doiUrlMatch) {
+                        result.doi = cleanLocator(doiUrlMatch[0]);
+                    } else if (doiTextMatch) {
+                        result.doi = cleanLocator(doiTextMatch[1]);
+                    }
+                }
+                
+                if (!result.url) {
+                    const urlMatch = line.match(/https?:\/\/[^\s<>"')]+/i);
+                    if (urlMatch) {
+                        result.url = cleanLocator(urlMatch[0]);
+                    }
+                }
+                
+                if (!result.issn) {
+                    const issnMatch = line.match(/ISSN\s+([0-9Xx\-]+)/i);
+                    if (issnMatch) {
+                        result.issn = cleanDisplayValue(issnMatch[1]);
+                    }
+                }
+                
+                if (!result.volume) {
+                    const volumeMatch = line.match(/\b(?:Volume|Vol\.?)\s+(\d+)/i);
+                    if (volumeMatch) {
+                        result.volume = volumeMatch[1];
+                    }
+                }
+                
+                if (!result.issue) {
+                    const issueMatch = line.match(/\b(?:Issue|No\.?)\s+(\d+)/i);
+                    if (issueMatch) {
+                        result.issue = issueMatch[1];
+                    }
+                }
+                
+                if (!result.year) {
+                    const yearLineMatch = line.match(/^\(?((19|20)\d{2})\)?[.,;]?$/);
+                    const yearInlineMatch = line.match(/\b((19|20)\d{2})\b/);
+                    if (yearLineMatch) {
+                        result.year = yearLineMatch[1];
+                    } else if (yearInlineMatch && /(?:Volume|Vol\.?|Issue|Pages?|pp\.?|article\s*(?:number|no))|,\s*((19|20)\d{2})\b/i.test(line)) {
+                        result.year = yearInlineMatch[1];
+                    }
+                }
+                
+                if (!result.pages) {
+                    const pagesMatch = line.match(/(?:Pages?|pp\.?)[\s:.,]+([A-Za-z]?\d+\s*[-–]\s*[A-Za-z]?\d+)/i) ||
+                        line.match(/^\(?([A-Za-z]?\d+\s*[-–]\s*[A-Za-z]?\d+)\)?[.,;]?$/);
+                    if (pagesMatch) {
+                        result.pages = pagesMatch[1].replace(/\s*[-–]\s*/g, '-');
+                    }
+                }
+                
+                if (!result.articleNumber) {
+                    const articleMatch = line.match(/article\s*(?:number|no)[\s:.,-]*([A-Za-z0-9-]+)/i);
+                    if (articleMatch) {
+                        result.articleNumber = cleanDisplayValue(articleMatch[1]);
+                    }
+                }
+                
+                if (/^\d{5,}[A-Za-z]?[.,;]?$/.test(line) && line !== result.year) {
+                    numericCandidates.push(cleanDisplayValue(line));
+                }
+                
+                const prefix = extractContentPrefix(line);
+                if (prefix && !isMetaOnlyLine(prefix) && !isNoiseLine(prefix)) {
+                    contentLines.push(prefix);
+                    return;
+                }
+                
+                if (!isMetaOnlyLine(line)) {
+                    contentLines.push(line);
+                }
+            });
+            
+            if (!result.year) {
+                const yearMatch = fullText.match(/\b((19|20)\d{2})\b/);
+                if (yearMatch) {
+                    result.year = yearMatch[1];
+                }
+            }
+            
+            if (!result.volume) {
+                const volumeMatch = fullText.match(/\b(?:Volume|Vol\.?)\s+(\d+)/i);
+                if (volumeMatch) {
+                    result.volume = volumeMatch[1];
+                }
+            }
+            
+            if (!result.issue) {
+                const issueMatch = fullText.match(/\b(?:Issue|No\.?)\s+(\d+)/i);
+                if (issueMatch) {
+                    result.issue = issueMatch[1];
+                }
+            }
+            
+            if (!result.pages) {
+                const pagesMatch = fullText.match(/\b([A-Za-z]?\d+\s*[-–]\s*[A-Za-z]?\d+)\b/);
+                if (pagesMatch) {
+                    result.pages = pagesMatch[1].replace(/\s*[-–]\s*/g, '-');
+                }
+            }
+            
+            if (!result.articleNumber) {
+                const fallbackArticle = numericCandidates.find(candidate => candidate !== result.year && candidate !== result.volume);
+                if (fallbackArticle) {
+                    result.articleNumber = fallbackArticle;
+                }
+            }
+            
+            const structuredContent = extractAuthorTitleJournal(contentLines);
+            result.authors = structuredContent.authors;
+            result.title = cleanDisplayValue(structuredContent.title);
+            result.journal = cleanDisplayValue(structuredContent.journal);
+            
+            return result;
+        }
+        
+        // 格式化作者
+        function parseAuthors(input) {
+            return splitAuthorCandidates(input);
+        }
+        
+        function getInitials(givenName) {
+            if (!givenName) return '';
+            const words = givenName.split(/\s+/);
+            return words.map(word => {
+                if (word.length > 0) {
+                    return word[0].toUpperCase() + '.';
+                }
+                return '';
+            }).join('');
+        }
+        
+        function normalizeAuthor(author) {
+            const author_str = author.trim();
+            
+            // If already in "Family, Initial" format (contains period after initial)
+            if (author_str.includes(',')) {
+                const parts = author_str.split(',').map(p => p.trim());
+                const family = parts[0];
+                const given = parts[1] || '';
+                
+                // Check if it's already in initial format (has periods)
+                if (given && given.includes('.')) {
+                    // Keep as-is, it's already properly formatted
+                    return {family, initials: given};
+                }
+                
+                // Otherwise generate initials from the given name
+                const initials = getInitials(given);
+                return {family, initials};
+            }
+            
+            // "Given Family" format
+            const words = author_str.split(/\s+/);
+            if (words.length === 1) {
+                return {family: words[0], initials: ''};
+            }
+            
+            const family = words[words.length - 1];
+            const given_words = words.slice(0, -1);
+            const given = given_words.join(' ');
+            const initials = getInitials(given);
+            return {family, initials};
+        }
+        
+        function formatAuthors(authorsList) {
+            if (authorsList.length === 0) return '';
+            const normalized = authorsList.map(normalizeAuthor);
+            const formatted = normalized.map(a => {
+                if (a.initials) {
+                    return a.family + ', ' + a.initials;
+                }
+                return a.family + ',';
+            });
+            
+            if (formatted.length === 1) return formatted[0].replace(/,$/, '');
+            if (formatted.length === 2) return formatted[0].replace(/,$/, '') + ' and ' + formatted[1].replace(/,$/, '');
+            
+            // More than 2 authors: "A., B., C. and D."
+            const allButLast = formatted.slice(0, -1).map(f => f.replace(/,$/, ''));
+            const last = formatted[formatted.length - 1].replace(/,$/, '');
+            return allButLast.join(', ') + ' and ' + last;
+        }
+        
+        function updateUniversityInfo() {
+            const selected = document.getElementById('university').value;
+            const uniInfo = UNIVERSITIES[selected];
+            const infoBox = document.getElementById('styleInfo');
+            infoBox.innerHTML = `<strong>${uniInfo.name}</strong><br/><span style="font-style: italic; color: #40916c;">风格: ${uniInfo.style}</span>`;
+        }
+        
+        function parseCitation() {
+            const citationText = document.getElementById('citationText').value.trim();
+            hideStatus();
+            
+            if (!citationText) {
+                showStatus('请先粘贴期刊网站复制出来的文献信息。', 'warning');
+                return;
+            }
+            
+            // 解析文本
+            const parsed = parseCitationText(citationText);
+            
+            // 显示解析结果
+            const resultDiv = document.getElementById('parseResult');
+            const resultHTML = `
+                <div class="parse-field"><span class="parse-label">作者:</span> <span>${escapeHtml(parsed.authors || '(未识别)')}</span></div>
+                <div class="parse-field"><span class="parse-label">标题:</span> <span>${escapeHtml(parsed.title || '(未识别)')}</span></div>
+                <div class="parse-field"><span class="parse-label">期刊:</span> <span>${escapeHtml(parsed.journal || '(未识别)')}</span></div>
+                <div class="parse-field"><span class="parse-label">年份:</span> <span>${escapeHtml(parsed.year || '(未识别)')}</span></div>
+                ${parsed.volume ? `<div class="parse-field"><span class="parse-label">卷号:</span> <span>${escapeHtml(parsed.volume)}</span></div>` : ''}
+                ${parsed.issue ? `<div class="parse-field"><span class="parse-label">期号:</span> <span>${escapeHtml(parsed.issue)}</span></div>` : ''}
+                ${parsed.pages ? `<div class="parse-field"><span class="parse-label">页码:</span> <span>${escapeHtml(parsed.pages)}</span></div>` : ''}
+                ${parsed.articleNumber ? `<div class="parse-field"><span class="parse-label">文章号:</span> <span>${escapeHtml(parsed.articleNumber)}</span></div>` : ''}
+                ${parsed.doi ? `<div class="parse-field"><span class="parse-label">DOI:</span> <span>${escapeHtml(parsed.doi)}</span></div>` : ''}
+                ${parsed.url ? `<div class="parse-field"><span class="parse-label">URL:</span> <span>${escapeHtml(parsed.url)}</span></div>` : ''}
+            `;
+            
+            resultDiv.innerHTML = resultHTML;
+            resultDiv.style.display = 'block';
+            
+            // 验证必填信息
+            if (!parsed.authors || !parsed.year || !parsed.title || !parsed.journal) {
+                const missingFields = [];
+                if (!parsed.authors) missingFields.push('作者');
+                if (!parsed.year) missingFields.push('年份');
+                if (!parsed.title) missingFields.push('标题');
+                if (!parsed.journal) missingFields.push('期刊');
+                showStatus(`识别还不完整，当前缺少：${missingFields.join('、')}。你可以调整粘贴内容后再试一次。`, 'warning');
+
+                resetOutputBox('识别结果不完整，暂时无法生成标准引文。');
+                return;
+            }
+            
+            // 生成格式化引文
+            generateFormattedCitation(parsed);
+            showStatus('已根据识别结果生成引文，请先快速检查标题和期刊是否正确。', 'success', 2500);
+        }
+        
+        function generateFormattedCitation(parsed) {
+            const authors = parseAuthors(parsed.authors);
+            const formattedAuthors = formatAuthors(authors);
+            const year = parsed.year || 'n.d.';
+            
+            // Format the citation according to Leeds Harvard standard
+            // Two patterns:
+            // 1. Regular: Authors. Year. Title. Journal. [Online]. Volume(issue), pages. [Accessed date]. Available from: DOI/URL
+            // 2. Article numbers: Authors. Year. Title. Journal. [Online]. Volume, article no: number [no pagination]. [Accessed date]. Available from: DOI/URL
+            
+            let citation = formattedAuthors;
+            if (citation && !citation.endsWith(',') && !citation.endsWith('.')) {
+                citation += '.';
+            }
+            
+            citation += ' ' + year + '.';
+            
+            // Title - should not be bold or italicized
+            if (parsed.title) {
+                citation += ' ' + parsed.title.replace(/[.]*$/, '') + '.';
+            }
+            
+            // Journal - should not be bold or italicized
+            if (parsed.journal) {
+                citation += ' ' + parsed.journal.replace(/[.]*$/, '') + '.';
+            }
+            
+            citation += ' [Online].';
+            
+            // Volume, Issue, and Pages/Article number
+            if (parsed.volume) {
+                citation += ' ' + parsed.volume;
+                if (parsed.issue) {
+                    citation += '(' + parsed.issue + ')';
+                }
+                
+                // Handle either pages or article number
+                if (parsed.articleNumber) {
+                    citation += ', article no: ' + parsed.articleNumber + ' [no pagination].';
+                } else if (parsed.pages) {
+                    let pageStr = parsed.pages;
+                    if (!pageStr.toLowerCase().startsWith('pp.') && !pageStr.toLowerCase().startsWith('pp ')) {
+                        pageStr = 'pp.' + pageStr;
+                    }
+                    citation += ', ' + pageStr + '.';
+                } else {
+                    citation += '.';
+                }
+            } else if (parsed.articleNumber) {
+                citation += ' article no: ' + parsed.articleNumber + ' [no pagination].';
+            } else if (parsed.pages) {
+                let pageStr = parsed.pages;
+                if (!pageStr.toLowerCase().startsWith('pp.')) {
+                    pageStr = 'pp.' + pageStr;
+                }
+                citation += ' ' + pageStr + '.';
+            }
+            
+            // Access date
+            const accessedDate = document.getElementById('accessDate').value;
+            const accessLine = formatAccessDate(accessedDate);
+            
+            citation += ' ' + accessLine + '.';
+            
+            // DOI or URL
+            let locator = '';
+            if (parsed.doi) {
+                if (!parsed.doi.toLowerCase().startsWith('http')) {
+                    locator = 'https://doi.org/' + parsed.doi.replace(/^doi[\s:]+/i, '');
+                } else {
+                    locator = parsed.doi;
+                }
+            } else if (parsed.url) {
+                locator = parsed.url;
+            }
+            
+            if (locator) {
+                citation += ' Available from: ' + locator;
+            } else {
+                // If no DOI or URL but we still have the end, just finish with a period
+                if (!citation.endsWith('.')) {
+                    citation += '.';
+                }
+            }
+            
+            // Final cleanup
+            citation = citation.replace(/\s+/g, ' ').trim();
+            // Remove any double periods
+            citation = citation.replace(/\.\.+/g, '.');
+            
+            // Display the result
+            const outputDiv = document.getElementById('output');
+            outputDiv.className = 'output-box';
+            outputDiv.textContent = citation;
+            
+            // Enable copy button
+            const copyBtn = document.getElementById('copyBtn');
+            copyBtn.disabled = false;
+        }
+        
+        function copyCitation() {
+            const text = document.getElementById('output').textContent;
+            if (!text || text.includes('格式化后的引文')) {
+                showStatus('当前没有可复制的引文，请先完成识别和生成。', 'warning');
+                return;
+            }
+            navigator.clipboard.writeText(text).then(() => {
+                showStatus('已复制到剪贴板。', 'success', 2000);
+            }).catch(() => {
+                showStatus('复制失败，请手动复制输出框中的内容。', 'error');
+            });
+        }
+        
+        function clearForm() {
+            document.getElementById('citationText').value = '';
+            document.getElementById('parseResult').style.display = 'none';
+            resetOutputBox();
+            hideStatus();
+        }
+        
+        // 页面加载时初始化
+        updateUniversityInfo();
+    </script>
+</body>
+</html>
